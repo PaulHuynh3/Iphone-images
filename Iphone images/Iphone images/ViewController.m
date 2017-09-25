@@ -9,6 +9,7 @@
 #import "ViewController.h"
 
 @interface ViewController ()
+@property (weak, nonatomic) IBOutlet UIImageView *imageView;
 
 @end
 
@@ -17,26 +18,33 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    NSURL *url = [NSURL URLWithString:@" http://imgur.com/zdwdenZ.png"];
+    NSURL *url = [NSURL URLWithString:@"http://imgur.com/zdwdenZ.png"];
     
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
     NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration];
     
-    NSURLSessionDownloadTask *downloadTask = [session downloadTaskWithURL:url
-                                     // this block of code is ran on another thread not main thread
-                                                    completionHandler:^(NSURL * location, NSURLResponse * response, NSError * error) {
+    // this block of code is ran on another thread not main thread
+    NSURLSessionDownloadTask  *downloadTask = [session downloadTaskWithURL:url completionHandler:^(NSURL *location, NSURLResponse * response, NSError * error) {
         
-    } ];
+        if (error){
+            NSLog(@"error: %@",error.localizedDescription);
+            return;
+        }
+        
+        NSData *data = [NSData dataWithContentsOfURL:location];
+        UIImage *image = [UIImage imageWithData:data];
+        
+        //putting information back on main thread.
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+            self.imageView.image = image;
+        }];
+        
+    }];
     
+    //keep the downloadtask outside of the block
     [downloadTask resume];
+ 
 
-
-}
-
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 
